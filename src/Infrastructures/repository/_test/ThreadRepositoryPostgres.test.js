@@ -30,7 +30,6 @@ describe('ThreadRepositoryPostgres', () => {
       await threadReposity.addThread(addThread)
 
       const findThread = await ThreadsTableTestHelper.findThread('thread-123')
-      console.log(findThread)
       expect(findThread).toHaveLength(1)
     })
   })
