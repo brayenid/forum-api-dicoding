@@ -12,9 +12,9 @@ const ThreadsTableTestHelper = {
 
     return result.rows
   },
-  async createThread() {
+  async createThread(title = 'this is title') {
     const payload = {
-      title: 'this is title',
+      title,
       body: 'this is body',
       owner: 'user-123'
     }

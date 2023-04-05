@@ -1,4 +1,6 @@
 const CommentsRepository = require('../../../Domains/comments/CommentsRepository')
+const ThreadRepository = require('../../../Domains/threads/ThreadRepository')
+const PayloadValidator = require('../../security/PayloadValidator')
 const AddCommentThreadUseCase = require('../AddCommentThreadUseCase')
 
 describe('add comment use case', () => {
@@ -15,14 +17,18 @@ describe('add comment use case', () => {
       owner: 'user-123'
     }
 
-    const mockedCommentsRepository = new CommentsRepository()
-    mockedCommentsRepository.addComment = jest.fn().mockImplementation(() => Promise.resolve(mockAddedComment))
+    const mockCommentsRepository = new CommentsRepository()
+    const mockCommentValidator = new PayloadValidator()
+    const mockThreadRepository = new ThreadRepository()
+    mockCommentsRepository.addComment = jest.fn().mockImplementation(() => Promise.resolve(mockAddedComment))
+    mockCommentValidator.validate = jest.fn().mockReturnValue(true)
+    mockThreadRepository.checkThreadAvailability = jest.fn().mockImplementation(() => Promise.resolve())
 
-    const addCommentThreadUseCase = new AddCommentThreadUseCase({ commentRepository: mockedCommentsRepository })
+    const addCommentThreadUseCase = new AddCommentThreadUseCase({ commentRepository: mockCommentsRepository, threadRepository: mockThreadRepository, commentValidator: mockCommentValidator })
 
     const actualAddingComment = await addCommentThreadUseCase.execute(payload)
 
     expect(actualAddingComment).toStrictEqual(mockAddedComment)
-    expect(mockedCommentsRepository.addComment).toBeCalledWith(payload)
+    expect(mockCommentsRepository.addComment).toBeCalledWith(payload)
   })
 })

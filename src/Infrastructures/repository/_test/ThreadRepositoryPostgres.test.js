@@ -33,4 +33,22 @@ describe('ThreadRepositoryPostgres', () => {
       expect(findThread).toHaveLength(1)
     })
   })
+
+  describe('get detail by id function', () => {
+    it('should return valid data', async () => {
+      await UsersTableTestHelper.addUser({ username: 'brayen' })
+      await ThreadsTableTestHelper.createThread()
+
+      const threadRepository = new ThreadRepositoryPostgres(pool)
+
+      const result = await threadRepository.getDetailById('thread-123')
+      const body = result.rows[0]
+
+      expect(body.id).toBeDefined()
+      expect(body.title).toBeDefined()
+      expect(body.body).toBeDefined()
+      expect(body.date).toBeDefined()
+      expect(body.owner).toBeDefined()
+    })
+  })
 })

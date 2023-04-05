@@ -6,5 +6,8 @@ describe('Comments repository interface', () => {
 
     expect(commentsRepository.addComment({})).rejects.toThrowError('COMMENTS_REPOSITORY.METHOD_NOT_IMPLEMENTED')
     expect(commentsRepository.deleteComment({})).rejects.toThrowError('COMMENTS_REPOSITORY.METHOD_NOT_IMPLEMENTED')
+    expect(commentsRepository.checkCommentInThreadAvailability({})).rejects.toThrowError('COMMENTS_REPOSITORY.METHOD_NOT_IMPLEMENTED')
+    expect(commentsRepository.checkCommentOwnership({})).rejects.toThrowError('COMMENTS_REPOSITORY.METHOD_NOT_IMPLEMENTED')
+    expect(commentsRepository.getDetailByThread({})).rejects.toThrowError('COMMENTS_REPOSITORY.METHOD_NOT_IMPLEMENTED')
   })
 })

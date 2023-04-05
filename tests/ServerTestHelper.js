@@ -12,6 +12,16 @@ const ServerTestHelper = {
     }
     await UsersTableTestHelper.addUser(payloadUser)
     return Jwt.token.generate(payloadUser, process.env.ACCESS_TOKEN_KEY)
+  },
+  async getAccessTokenDifferentUser() {
+    const payloadUser = {
+      id: 'user-124',
+      username: 'dicoding',
+      password: 'secret',
+      fullname: 'Dicoding Indonesia'
+    }
+    await UsersTableTestHelper.addUser(payloadUser)
+    return Jwt.token.generate(payloadUser, process.env.ACCESS_TOKEN_KEY)
   }
 }
 

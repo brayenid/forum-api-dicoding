@@ -21,6 +21,10 @@ exports.up = (pgm) => {
     thread: {
       type: 'VARCHAR(50)',
       notNull: true
+    },
+    deleted: {
+      type: 'boolean',
+      default: false
     }
   })
 
