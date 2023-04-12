@@ -31,9 +31,10 @@ describe('CommentRepository Postgres', () => {
       const fakeIdGenerator = () => '123'
       const commentRepositoryPostgres = new CommentsRepositoryPostgres(pool, fakeIdGenerator)
 
-      await commentRepositoryPostgres.addComment(payload)
-
+      const response = await commentRepositoryPostgres.addComment(payload)
       const findComment = await CommentsTableTestHelper.findComment('comment-123')
+
+      expect(response).toEqual({ id: 'comment-123', content: 'I like this thread', owner: 'user-123' })
       expect(findComment).toHaveLength(1)
     })
   })
@@ -58,26 +59,42 @@ describe('CommentRepository Postgres', () => {
       expect(response).toHaveLength(1)
       expect(response[0].deleted).toStrictEqual(true)
     })
+  })
 
-    it('should not delete and throw NotFoundError if the threadId and commentId were not valid', async () => {
+  describe('checkCommentInThreadAvailability function', () => {
+    it('should throw NotFoundError if comment in thread was not available', async () => {
       await UsersTableTestHelper.addUser({ username: 'brayenid' })
-      await ThreadsTableTestHelper.createThread() //make thread-123
-      await CommentsTableTestHelper.createComment() //make comment-123
-
+      await ThreadsTableTestHelper.createThread()
+      await CommentsTableTestHelper.createComment() //create comment-123
       const payload = {
-        commentId: 'comment-123',
-        threadId: 'thread-124'
+        commentId: 'comment-124',
+        threadId: 'thread-123'
       }
 
-      const fakeIdGenerator = () => '123'
-      const commentRepositoryPostgres = new CommentsRepositoryPostgres(pool, fakeIdGenerator)
+      const commentRepositoryPostgres = new CommentsRepositoryPostgres(pool)
 
       await expect(async () => {
         await commentRepositoryPostgres.checkCommentInThreadAvailability(payload)
       }).rejects.toThrow(NotFoundError)
     })
 
-    it('should not delete if ownership was invalid', async () => {
+    it('should not throw error and resolves if comment in thread was available', async () => {
+      await UsersTableTestHelper.addUser({ username: 'brayenid' })
+      await ThreadsTableTestHelper.createThread()
+      await CommentsTableTestHelper.createComment() //create comment-123
+      const payload = {
+        commentId: 'comment-123',
+        threadId: 'thread-123'
+      }
+
+      const commentRepositoryPostgres = new CommentsRepositoryPostgres(pool)
+
+      await expect(commentRepositoryPostgres.checkCommentInThreadAvailability(payload)).resolves.not.toThrow()
+    })
+  })
+
+  describe('checkCommentOwnership function', () => {
+    it('should throw error for unauthorized user', async () => {
       await UsersTableTestHelper.addUser({ username: 'brayenid' })
       await ThreadsTableTestHelper.createThread() //make thread-123
       await CommentsTableTestHelper.createComment() //make comment-123
@@ -95,6 +112,23 @@ describe('CommentRepository Postgres', () => {
         await commentRepositoryPostgres.checkCommentOwnership(payload)
       }).rejects.toThrow(AuthorizationError)
     })
+
+    it('should not throw error for authorized user and resolve', async () => {
+      await UsersTableTestHelper.addUser({ username: 'brayenid' })
+      await ThreadsTableTestHelper.createThread() //make thread-123
+      await CommentsTableTestHelper.createComment() //make comment-123
+
+      const payload = {
+        commentId: 'comment-123',
+        threadId: 'thread-123',
+        owner: 'user-123'
+      }
+
+      const fakeIdGenerator = () => '123'
+      const commentRepositoryPostgres = new CommentsRepositoryPostgres(pool, fakeIdGenerator)
+
+      await expect(commentRepositoryPostgres.checkCommentOwnership(payload)).resolves.not.toThrow()
+    })
   })
 
   describe('getDetailByThread function', () => {
@@ -102,17 +136,23 @@ describe('CommentRepository Postgres', () => {
       await UsersTableTestHelper.addUser({ username: 'brayenid' })
       await ThreadsTableTestHelper.createThread()
       await CommentsTableTestHelper.createComment()
-      await CommentsTableTestHelper.createComment('thread-123', '124') //create comment-124
+      await CommentsTableTestHelper.createComment('thread-123', 'comment-124') //create comment-124
 
       const commentRepositoryPostgres = new CommentsRepositoryPostgres(pool)
       const response = await commentRepositoryPostgres.getDetailByThread('thread-123')
-      const body = response.rows[0]
 
-      expect(response.rows).toHaveLength(2)
-      expect(body.id).toBeDefined()
-      expect(body.owner).toBeDefined()
-      expect(body.date).toBeDefined()
-      expect(body.content).toBeDefined()
+      expect(response).toHaveLength(2)
+      expect(response[0].id).toEqual('comment-123')
+      expect(response[0].username).toEqual('brayenid')
+      expect(typeof response[0].date).toBe('string')
+      expect(response[0].content).toEqual('I like this thread')
+      expect(response[0].deleted).toStrictEqual(false)
+
+      expect(response[1].id).toEqual('comment-124')
+      expect(response[1].username).toEqual('brayenid')
+      expect(typeof response[1].date).toBe('string')
+      expect(response[1].content).toEqual('I like this thread')
+      expect(response[1].deleted).toStrictEqual(false)
     })
   })
 })

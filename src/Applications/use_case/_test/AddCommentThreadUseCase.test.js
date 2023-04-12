@@ -20,7 +20,15 @@ describe('add comment use case', () => {
     const mockCommentsRepository = new CommentsRepository()
     const mockCommentValidator = new PayloadValidator()
     const mockThreadRepository = new ThreadRepository()
-    mockCommentsRepository.addComment = jest.fn().mockImplementation(() => Promise.resolve(mockAddedComment))
+
+    //mocking
+    mockCommentsRepository.addComment = jest.fn().mockImplementation(() =>
+      Promise.resolve({
+        id: 'comment-1234',
+        content: 'This is comment',
+        owner: 'user-123'
+      })
+    )
     mockCommentValidator.validate = jest.fn().mockReturnValue(true)
     mockThreadRepository.checkThreadAvailability = jest.fn().mockImplementation(() => Promise.resolve())
 
@@ -30,5 +38,7 @@ describe('add comment use case', () => {
 
     expect(actualAddingComment).toStrictEqual(mockAddedComment)
     expect(mockCommentsRepository.addComment).toBeCalledWith(payload)
+    expect(mockCommentValidator.validate).toBeCalledWith(payload)
+    expect(mockThreadRepository.checkThreadAvailability).toBeCalledWith(payload.thread)
   })
 })

@@ -1,19 +1,24 @@
 /* istanbul ignore file */
 const pool = require('../src/Infrastructures/database/postgres/pool')
-const CommentsRepositoryPostgres = require('../src/Infrastructures/repository/CommentRepositoryPostgres')
 
 const CommentsTableTestHelper = {
-  async createComment(threadId = 'thread-123', id = '123') {
+  async createComment(threadId = 'thread-123', id = 'comment-123') {
     const payload = {
       content: 'I like this thread',
       owner: 'user-123',
       thread: threadId
     }
 
-    const fakeIdGenerator = () => id
-    const commentRepositoryPostgres = new CommentsRepositoryPostgres(pool, fakeIdGenerator)
+    const nowDate = new Date()
+    const { content, owner, thread } = payload
 
-    await commentRepositoryPostgres.addComment(payload)
+    const query = {
+      text: 'INSERT INTO comments VALUES($1, $2, $3, $4, $5) RETURNING id, content, owner',
+      values: [id, owner, nowDate, content, thread]
+    }
+
+    const result = await pool.query(query)
+    return { ...result.rows[0] }
   },
   async findComment(id) {
     const query = {

@@ -74,13 +74,12 @@ class ThreadsHandler {
     const { threadId } = request.params
     const getThreadDetailUseCase = this._container.getInstance(GetThreadDetailUseCase.name)
     const result = await getThreadDetailUseCase.execute(threadId)
-
     const response = h.response({
       status: 'success',
       data: {
         thread: {
-          ...result.thread.rows[0],
-          comment: result.comment.rows
+          ...result.thread[0],
+          comments: result.comment
         }
       }
     })
